@@ -26,3 +26,6 @@ process*
 scripts/*
 test_experiments/*
 naive*
+
+# add by me
+.vscode/*
