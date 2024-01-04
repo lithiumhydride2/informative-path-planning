@@ -58,7 +58,7 @@ class GPModel(object):
             self.dimension = dimension
             self.asymmetric = True
         else:
-            print dimension
+            print(dimension)
             raise ValueError('Environment must have dimension 2 or 3')
 
         if kernel == 'rbf':
@@ -139,7 +139,7 @@ class GPModel(object):
         
         # Read pre-trained kernel parameters from file, if avaliable and no training data is provided
         if os.path.isfile(kernel_file):
-            print "Loading kernel parameters from file"
+            print("Loading kernel parameters from file")
             logger.info("Loading kernel parameters from file")
             self.kern[:] = np.load(kernel_file)
         else:
@@ -162,7 +162,7 @@ class GPModel(object):
             xvals = self.xvals
             zvals = self.zvals
 
-            print "Optimizing kernel parameters given data"
+            print("Optimizing kernel parameters given data")
             logger.info("Optimizing kernel parameters given data")
             # Initilaize a GP model (used only for optmizing kernel hyperparamters)
             self.m = GPy.models.GPRegression(np.array(xvals), np.array(zvals), self.kern)
@@ -563,7 +563,7 @@ class SpatialGPModel(GPModel):
         point_set = Set(point_list)
         xpoints = [self.xvals[index] for index in point_set]
         zpoints = [self.zvals[index] for index in point_set]
-        # print "Size before:", len(xpoints)
+        # print("Size before:", len(xpoints))
 
         # Brute force check the points in the waiting queue
         if self.xwait is not None and self.xwait.shape[0] > 0:
@@ -571,23 +571,23 @@ class SpatialGPModel(GPModel):
             for i, u in enumerate(self.xwait):
                 for j, v in enumerate(xvals):
                     # if xvals.shape[0] < 10:
-                    #     print "Comparing", i, j
-                    #     print "Points:", u, v
+                    #     print("Comparing", i, j)
+                    #     print("Points:", u, v)
                     dist = sp.spatial.distance.minkowski(u, v, p = 2.0)
                     if dist <= self.neighbor_radius:
                         wait_list.append(i)
                         # if xvals.shape[0] < 10:
-                        #     print "Adding point", u
+                        #     print("Adding point", u)
 
             
             # if xvals.shape[0] < 10:
-            #     print "The wait list:", wait_list
+            #     print("The wait list:", wait_list)
 
             wait_set = Set(wait_list)
         
             xpoints = [self.xwait[index] for index in wait_set] + xpoints
             zpoints = [self.zwait[index] for index in wait_set] + zpoints
-            # print "Size after:", len(xpoints)
+            # print("Size after:", len(xpoints))
 
         xpoints = np.array(xpoints).reshape(-1, 2)
         zpoints = np.array(zpoints).reshape(-1, 1)
@@ -597,11 +597,11 @@ class SpatialGPModel(GPModel):
             return np.zeros((n_points, 1)), np.ones((n_points, 1)) * self.variance
 
         # if self.xvals is not None:
-        #     print "Size of kernel array:", self.xvals
+        #     print("Size of kernel array:", self.xvals)
         # if self.xwait is not None:
-        #     print "Size of wait array:", self.xwait.shape
+        #     print("Size of wait array:", self.xwait.shape)
         # if xpoints is not None:
-        #     print "Size of returned points:", xpoints.shape
+        #     print("Size of returned points:", xpoints.shape)
 
         Kx = self.kern.K(xpoints, xvals)
         K = self.kern.K(xpoints, xpoints)
@@ -638,19 +638,19 @@ class SpatialGPModel(GPModel):
             # Else, return the predicted values
             mean, variance = self.model.predict(xvals, full_cov = False, include_likelihood = include_noise)
             if xvals.shape[0] < 10:
-                # print "-------- MEAN ------------"
-                # print "spatial method:"
-                # print mu
-                # print "default method:"
-                # print mean
-                # print "-------- VARIANCE ------------"
-                # print "spatial method:"
-                # print var
-                # print "default method:"
-                # print variance 
+                # print("-------- MEAN ------------")
+                # print("spatial method:")
+                # print(mu)
+                # print("default method:")
+                # print(mean)
+                # print("-------- VARIANCE ------------")
+                # print("spatial method:")
+                # print(var)
+                # print("default method:")
+                # print(variance )
                 
-                print np.sum(mu - mean)
-                print np.sum(var - variance)
+                print(np.sum(mu - mean))
+                print(np.sum(var - variance))
 
         return mu, var
     
@@ -716,22 +716,22 @@ class SubsampledGPModel(OnlineGPModel):
         else:
             # Find nearest neightbor within radius
             dist, index = self.spatial_tree.query(xvals, k = 1, distance_upper_bound = self.neighbor_radius)
-            print "Distance to nearest neighbor:", dist
-            print "Index:", index
-            print "Dataset:", self.xvals.shape
+            print("Distance to nearest neighbor:", dist)
+            print("Index:", index)
+            print("Dataset:", self.xvals.shape)
 
             for j, (d, i) in enumerate(zip(dist, index)):
                 m, v = self.predict_value(xvals, include_noise = True, full_cov = False)
-                print "Value distance:", np.abs(self.zvals[i, :] - m[j, :])
+                print("Value distance:", np.abs(self.zvals[i, :] - m[j, :]))
                 if d == float("inf") or np.abs(self.zvals[i, :] - m[j, :]) > self.val_eps:
-                    print "Udating model with point:", d, self.xvals[i], "and values:", self.zvals[i, :], m[j, :]
+                    print("Udating model with point:", d, self.xvals[i], "and values:", self.zvals[i, :], m[j, :])
                     self.update_model(xvals, zvals)
                     return
-            print "---------- Skiped Update! -------------------"
+            print("---------- Skiped Update! -------------------")
 
     @property
     def spatial_tree(self):
         if self._spatial_tree is None:
-            print "Rebuilding KD tree"
+            print("Rebuilding KD tree")
             self._spatial_tree = sp.spatial.KDTree(self.xvals, leafsize = 5)
         return self._spatial_tree
